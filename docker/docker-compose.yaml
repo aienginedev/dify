@@ -14,22 +14,23 @@ services:
       # The base URL of console application web frontend, refers to the Console base URL of WEB service if console domain is
       # different from api or web app domain.
       # example: http://cloud.dify.ai
-      CONSOLE_WEB_URL: ''
-      # Password for admin user initialization.
-      # If left unset, admin user will not be prompted for a password when creating the initial admin account.
-      INIT_PASSWORD: ''
+      CONSOLE_WEB_URL: 'https://app.cagent.dev'
       # The base URL of console application api server, refers to the Console base URL of WEB service if console domain is
       # different from api or web app domain.
       # example: http://cloud.dify.ai
-      CONSOLE_API_URL: ''
+      CONSOLE_API_URL: 'https://appapi.cagent.dev'
       # The URL prefix for Service API endpoints, refers to the base URL of the current API service if api domain is
       # different from console domain.
       # example: http://api.dify.ai
-      SERVICE_API_URL: ''
+      SERVICE_API_URL: 'https://appapi.cagent.dev'
+      # The URL prefix for Web APP api server, refers to the Web App base URL of WEB service if web app domain is different from
+      # console or api domain.
+      # example: http://udify.app
+      APP_API_URL: 'https://app.cagent.dev'
       # The URL prefix for Web APP frontend, refers to the Web App base URL of WEB service if web app domain is different from
       # console or api domain.
       # example: http://udify.app
-      APP_WEB_URL: ''
+      APP_WEB_URL: 'https://app.cagent.dev'
       # File preview or download Url prefix.
       # used to display File preview or download Url to the front-end or as Multi-model inputs;
       # Url is signed and has expiration time.
@@ -129,8 +130,8 @@ services:
       # Mount the storage directory to the container, for storing user files.
       - ./volumes/app/storage:/app/api/storage
     # uncomment to expose dify-api port to host
-    # ports:
-    #   - "5001:5001"
+    ports:
+      - "5001:5001"
 
   # worker service
   # The Celery worker for processing the queue.
@@ -205,24 +206,24 @@ services:
       - ./volumes/app/storage:/app/api/storage
 
   # Frontend web application.
-  web:
-    image: langgenius/dify-web:0.5.7
-    restart: always
-    environment:
-      EDITION: SELF_HOSTED
-      # The base URL of console application api server, refers to the Console base URL of WEB service if console domain is
-      # different from api or web app domain.
-      # example: http://cloud.dify.ai
-      CONSOLE_API_URL: ''
-      # The URL for Web APP api server, refers to the Web App base URL of WEB service if web app domain is different from
-      # console or api domain.
-      # example: http://udify.app
-      APP_API_URL: ''
-      # The DSN for Sentry error reporting. If not set, Sentry error reporting will be disabled.
-      SENTRY_DSN: ''
-    # uncomment to expose dify-web port to host
-    # ports:
-    #   - "3000:3000"
+  # web:
+  #   image: langgenius/dify-web:0.4.5
+  #   restart: always
+  #   environment:
+  #     EDITION: SELF_HOSTED
+  #     # The base URL of console application api server, refers to the Console base URL of WEB service if console domain is
+  #     # different from api or web app domain.
+  #     # example: http://cloud.dify.ai
+  #     CONSOLE_API_URL: ''
+  #     # The URL for Web APP api server, refers to the Web App base URL of WEB service if web app domain is different from
+  #     # console or api domain.
+  #     # example: http://udify.app
+  #     APP_API_URL: ''
+  #     # The DSN for Sentry error reporting. If not set, Sentry error reporting will be disabled.
+  #     SENTRY_DSN: ''
+  #   # uncomment to expose dify-web port to host
+  #   # ports:
+  #   #   - "3000:3000"
 
   # The postgres database.
   db:
@@ -291,7 +292,7 @@ services:
   # (if uncommented, you need to comment out the weaviate service above,
   # and set VECTOR_STORE to qdrant in the api & worker service.)
   # qdrant:
-  #   image: langgenius/qdrant:v1.7.3
+  #   image: langgenius/qdrant:1.7.3
   #   restart: always
   #   volumes:
   #     - ./volumes/qdrant:/qdrant/storage
@@ -303,15 +304,16 @@ services:
 
   # The nginx reverse proxy.
   # used for reverse proxying the API service and Web service.
-  nginx:
-    image: nginx:latest
-    restart: always
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./nginx/proxy.conf:/etc/nginx/proxy.conf
-      - ./nginx/conf.d:/etc/nginx/conf.d
-    depends_on:
-      - api
-      - web
-    ports:
-      - "80:80"
+  #nginx:
+  #  image: nginx:latest
+  # restart: always
+  # volumes:
+  #   - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+  #   - ./nginx/proxy.conf:/etc/nginx/proxy.conf
+  #   - ./nginx/conf.d:/etc/nginx/conf.d
+  # depends_on:
+  #   - api
+  #   - web
+  # ports:
+  #   - "80:80"
+
