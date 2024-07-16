@@ -4,15 +4,14 @@ x-shared-env: &shared-api-worker-env
   FLASK_DEBUG: ${FLASK_DEBUG:-false}
   SECRET_KEY: ${SECRET_KEY:-sk-9f73s3ljTXVcMT3Blb3ljTqtsKiGHXVcMT3BlbkFJLK7U}
   INIT_PASSWORD: ${INIT_PASSWORD:-}
-  CONSOLE_WEB_URL: ${CONSOLE_WEB_URL:-}
-  CONSOLE_API_URL: ${CONSOLE_API_URL:-}
-  SERVICE_API_URL: ${SERVICE_API_URL:-}
-  APP_WEB_URL: ${APP_WEB_URL:-}
+  CONSOLE_WEB_URL: https://app.actionagent.ai
+  CONSOLE_API_URL: https://api.actionagent.ai
+  SERVICE_API_URL: https://api.actionagent.ai
+  APP_WEB_URL: https://app.actionagent.ai
   CHECK_UPDATE_URL: ${CHECK_UPDATE_URL:-https://updates.dify.ai}
   OPENAI_API_BASE: ${OPENAI_API_BASE:-https://api.openai.com/v1}
   FILES_URL: ${FILES_URL:-}
   FILES_ACCESS_TIMEOUT: ${FILES_ACCESS_TIMEOUT:-300}
-  APP_MAX_ACTIVE_REQUESTS: ${APP_MAX_ACTIVE_REQUESTS:-0}
   MIGRATION_ENABLED: ${MIGRATION_ENABLED:-true}
   DEPLOY_ENV: ${DEPLOY_ENV:-PRODUCTION}
   DIFY_BIND_ADDRESS: ${DIFY_BIND_ADDRESS:-0.0.0.0}
@@ -83,12 +82,6 @@ x-shared-env: &shared-api-worker-env
   MILVUS_USER: ${MILVUS_USER:-root}
   MILVUS_PASSWORD: ${MILVUS_PASSWORD:-Milvus}
   MILVUS_SECURE: ${MILVUS_SECURE:-false}
-  MYSCALE_HOST: ${MYSCALE_HOST:-myscale}
-  MYSCALE_PORT: ${MYSCALE_PORT:-8123}
-  MYSCALE_USER: ${MYSCALE_USER:-default}
-  MYSCALE_PASSWORD: ${MYSCALE_PASSWORD:-}
-  MYSCALE_DATABASE: ${MYSCALE_DATABASE:-dify}
-  MYSCALE_FTS_PARAMS: ${MYSCALE_FTS_PARAMS:-}
   RELYT_HOST: ${RELYT_HOST:-db}
   RELYT_PORT: ${RELYT_PORT:-5432}
   RELYT_USER: ${RELYT_USER:-postgres}
@@ -115,15 +108,6 @@ x-shared-env: &shared-api-worker-env
   CHROMA_DATABASE: ${CHROMA_DATABASE:-default_database}
   CHROMA_AUTH_PROVIDER: ${CHROMA_AUTH_PROVIDER:-chromadb.auth.token_authn.TokenAuthClientProvider}
   CHROMA_AUTH_CREDENTIALS: ${CHROMA_AUTH_CREDENTIALS:-}
-  # AnalyticDB configuration
-  ANALYTICDB_KEY_ID: ${ANALYTICDB_KEY_ID:-}
-  ANALYTICDB_KEY_SECRET: ${ANALYTICDB_KEY_SECRET:-}
-  ANALYTICDB_REGION_ID: ${ANALYTICDB_REGION_ID:-}
-  ANALYTICDB_INSTANCE_ID: ${ANALYTICDB_INSTANCE_ID:-}
-  ANALYTICDB_ACCOUNT: ${ANALYTICDB_ACCOUNT:-}
-  ANALYTICDB_PASSWORD: ${ANALYTICDB_PASSWORD:-}
-  ANALYTICDB_NAMESPACE: ${ANALYTICDB_NAMESPACE:-dify}
-  ANALYTICDB_NAMESPACE_PASSWORD: ${ANALYTICDB_NAMESPACE_PASSWORD:-}
   OPENSEARCH_HOST: ${OPENSEARCH_HOST:-opensearch}
   OPENSEARCH_PORT: ${OPENSEARCH_PORT:-9200}
   OPENSEARCH_USER: ${OPENSEARCH_USER:-admin}
@@ -193,6 +177,8 @@ services:
     networks:
       - ssrf_proxy_network
       - default
+    ports:
+      - "5001:5001"
 
   # worker service
   # The Celery worker for processing the queue.
@@ -325,8 +311,8 @@ services:
       - api
       - web
     ports:
-      - "${EXPOSE_NGINX_PORT:-80}:${NGINX_PORT:-80}"
-      - "${EXPOSE_NGINX_SSL_PORT:-443}:${NGINX_SSL_PORT:-443}"
+      - "8081:80"
+      - "8444:443"
 
   # The Weaviate vector store.
   weaviate:
@@ -336,7 +322,7 @@ services:
       - weaviate
     restart: always
     volumes:
-      # Mount the Weaviate data directory to the con tainer.
+      # Mount the Weaviate data directory to the container.
       - ./volumes/weaviate:/var/lib/weaviate
     environment:
       # The Weaviate configurations
@@ -537,21 +523,6 @@ services:
       - opensearch-net
     depends_on:
       - opensearch
-
-  # MyScale vector database
-  myscale:
-    container_name: myscale
-    image: myscale/myscaledb:1.6
-    profiles:
-      - myscale
-    restart: always
-    tty: true
-    volumes:
-      - ./volumes/myscale/data:/var/lib/clickhouse
-      - ./volumes/myscale/log:/var/log/clickhouse-server
-      - ./volumes/myscale/config/users.d/custom_users_config.xml:/etc/clickhouse-server/users.d/custom_users_config.xml
-    ports:
-      - "${MYSCALE_PORT:-8123}:${MYSCALE_PORT:-8123}"
 
 networks:
   # create a network between sandbox, api and ssrf_proxy, and can not access outside.
