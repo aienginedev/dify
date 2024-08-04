@@ -44,21 +44,30 @@ class XinferenceRerankModel(RerankModel):
                 docs=[]
             )
 
-        if credentials['server_url'].endswith('/'):
-            credentials['server_url'] = credentials['server_url'][:-1]
+        server_url = credentials['server_url']
+        model_uid = credentials['model_uid']
+        api_key = credentials.get('api_key')
+        if server_url.endswith('/'):
+            server_url = server_url[:-1]
+        auth_headers = {'Authorization': f'Bearer {api_key}'} if api_key else {}
 
-        handle = RESTfulRerankModelHandle(credentials['model_uid'], credentials['server_url'],auth_headers={})
-        response = handle.rerank(
-            documents=docs,
-            query=query,
-            top_n=top_n,
-        )
+        try:
+            handle = RESTfulRerankModelHandle(model_uid, server_url, auth_headers)
+            response = handle.rerank(
+                documents=docs,
+                query=query,
+                top_n=top_n,
+                return_documents=True
+            )
+        except RuntimeError as e:
+            raise InvokeServerUnavailableError(str(e))
+
 
         rerank_documents = []
         for idx, result in enumerate(response['results']):
             # format document
             index = result['index']
-            page_content = result['document']
+            page_content = result['document'] if isinstance(result['document'], str) else result['document']['text']
             rerank_document = RerankDocument(
                 index=index,
                 text=page_content,
@@ -102,7 +111,7 @@ class XinferenceRerankModel(RerankModel):
             if not isinstance(xinference_client, RESTfulRerankModelHandle):
                 raise InvokeBadRequestError(
                     'please check model type, the model you want to invoke is not a rerank model')
-            
+
             self.invoke(
                 model=model,
                 credentials=credentials,
